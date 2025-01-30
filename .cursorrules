@@ -1,0 +1,83 @@
+# Raycaster Project Rules
+
+## Package Management
+
+- Use pnpm for dependency management
+- Lock file must be committed (pnpm-lock.yaml)
+- Use `pnpm add` for adding new dependencies
+- Use `pnpm dlx` for one-off command execution
+
+## Code Organization
+
+- Use Next.js App Directory structure
+- Keep components modular and reusable
+- Follow TypeScript best practices
+- Use Tailwind CSS for styling
+- Utilize shadcn/ui components for consistent UI
+- Keep shadcn components in @/components/ui directory
+- Keep all types in types/ directory
+- Keep all database logic in app/db/ directory
+- Keep all API routes in app/api/ directory
+- Keep all utilities in lib/ directory
+
+## Naming Conventions
+
+- Components: PascalCase (e.g., NotesSection.tsx)
+- Functions: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Files: kebab-case for pages, PascalCase for components
+- Types: PascalCase with descriptive names
+- Database functions: camelCase with action prefix (e.g., getInsights, createTask)
+
+## Component Structure
+
+- Group related components in feature folders
+- Keep UI components separate from data fetching logic
+- Use custom hooks for reusable logic
+- Maintain shadcn/ui component registry
+- Use composition over inheritance with shadcn components
+
+## State Management
+
+- Use Supabase for real-time data
+- Implement proper error handling
+- Follow React Query patterns for data fetching
+- Use shadcn's form hooks for form management
+- Keep database types in types/database.ts
+
+## TypeScript
+
+- Define interfaces for all data structures
+- Use strict type checking
+- Avoid 'any' types unless absolutely necessary
+- Export component prop types
+- Use shadcn's pre-defined type utilities
+- Use Supabase's generated types for database
+
+## Testing
+
+- Write unit tests for critical components
+- Test real-time functionality
+- Validate AI response handling
+- Test custom shadcn component implementations
+
+## Performance
+
+- Implement proper loading states
+- Use Next.js Image optimization
+- Lazy load non-critical components
+- Use shadcn's built-in animations judiciously
+
+## Security
+
+- Sanitize all user inputs
+- Implement proper error handling
+- Secure API endpoints
+- Never expose sensitive data in client code
+
+## Component Library
+
+- Use shadcn/ui as primary component library
+- Customize components via tailwind.config.js
+- Keep component overrides in @/components/ui
+- Document any component modifications
