@@ -22,7 +22,7 @@ interface NoteInputProps {
   onNoteAdded?: () => void
 }
 
-export function NoteInput({ insightId, taskId, userId, onNoteAdded }: NoteInputProps) {
+export function NoteInput({ taskId, userId, onNoteAdded }: NoteInputProps) {
   const { toast } = useToast()
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteFormSchema),

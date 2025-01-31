@@ -11,9 +11,11 @@ type CamelCase<S extends string> = S extends `${infer P}_${infer Q}`
   ? `${P}${Capitalize<CamelCase<Q>>}`
   : S;
 
-type KeysToCamelCase<T> = T extends Array<any>
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+type KeysToCamelCase<T> = T extends Array<JsonValue>
   ? Array<KeysToCamelCase<T[number]>>
-  : T extends Record<string, any>
+  : T extends Record<string, JsonValue>
   ? {
       [K in keyof T as CamelCase<string & K>]: KeysToCamelCase<T[K]>;
     }
