@@ -1,19 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createInsight } from '@/app/db/supabase'
 import { ResearchCoordinator } from '@/lib/research/coordinator'
-import { InsightCard } from '@/types/database'
+import { Database } from '@/types/database'
+
+type InsightInsert = Database['public']['Tables']['insights']['Insert']
 
 // Type guard to validate insight data
-function validateInsight(data: any): data is Omit<InsightCard, 'id'> {
+function validateInsight(data: any): data is InsightInsert {
   return (
     typeof data.title === 'string' &&
     typeof data.company_name === 'string' &&
     typeof data.confidence === 'number' &&
-    typeof data.companyValue === 'string' &&
-    Array.isArray(data.commonObjections) &&
-    Array.isArray(data.recommendedResponses) &&
-    Array.isArray(data.sourcesAndReferences) &&
-    typeof data.lastUpdated === 'string' &&
+    typeof data.company_value === 'string' &&
+    typeof data.category === 'string' &&
+    (!data.common_objections || Array.isArray(data.common_objections)) &&
+    (!data.recommended_responses || Array.isArray(data.recommended_responses)) &&
+    (!data.sources_and_references || Array.isArray(data.sources_and_references)) &&
+    (!data.active_trials || typeof data.active_trials === 'number') &&
+    (!data.key_indications || Array.isArray(data.key_indications)) &&
+    (!data.key_patent_areas || Array.isArray(data.key_patent_areas)) &&
+    (!data.market_size || typeof data.market_size === 'number') &&
+    (!data.competitors || Array.isArray(data.competitors)) &&
+    (!data.patent_count || typeof data.patent_count === 'number') &&
+    typeof data.last_updated === 'string' &&
     ['patent', 'clinical', 'market'].includes(data.category)
   )
 }
@@ -81,13 +90,40 @@ export async function POST(request: Request) {
 
 async function storeInsight(category: string, data: any) {
   try {
+    // Transform data to match database schema
+    const transformedData = {
+      ...data,
+      company_value: data.companyValue,
+      common_objections: data.commonObjections,
+      recommended_responses: data.recommendedResponses,
+      sources_and_references: data.sourcesAndReferences,
+      active_trials: data.activeTrials,
+      key_indications: data.keyIndications,
+      key_patent_areas: data.keyPatentAreas,
+      market_size: data.marketSize,
+      last_updated: data.lastUpdated,
+      patent_count: data.patentCount
+    }
+
+    // Remove the camelCase fields
+    delete transformedData.companyValue;
+    delete transformedData.commonObjections;
+    delete transformedData.recommendedResponses;
+    delete transformedData.sourcesAndReferences;
+    delete transformedData.activeTrials;
+    delete transformedData.keyIndications;
+    delete transformedData.keyPatentAreas;
+    delete transformedData.marketSize;
+    delete transformedData.lastUpdated;
+    delete transformedData.patentCount;
+
     // Validate insight data
-    if (!validateInsight(data)) {
+    if (!validateInsight(transformedData)) {
       throw new Error(`Invalid ${category} insight data structure`)
     }
 
     // Attempt to store the insight
-    const { data: result, error } = await createInsight(data)
+    const { data: result, error } = await createInsight(transformedData)
     
     if (error) {
       throw error
