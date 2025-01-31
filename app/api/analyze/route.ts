@@ -46,6 +46,8 @@ function validateInsight(data: Partial<InsightInsert>): data is InsightInsert {
   )
 }
 
+export const runtime = 'edge'
+
 export async function POST(request: Request) {
   try {
     const data = await request.formData()
@@ -61,43 +63,55 @@ export async function POST(request: Request) {
     // Extract company name for the redirect
     const companyName = companyUrl.replace(/^https?:\/\//, '').split('.')[0]
 
-    // Initialize research coordinator and analyze
-    const coordinator = new ResearchCoordinator()
-    const results = await coordinator.analyze(companyUrl)
+    // Create a new TransformStream for streaming the response
+    const stream = new TransformStream()
+    const writer = stream.writable.getWriter()
+    const encoder = new TextEncoder()
 
-    console.log('🔍 Generated research results:', {
-      patent: { ...results.patent, company_name: companyName },
-      clinical: { ...results.clinical, company_name: companyName },
-      market: { ...results.market, company_name: companyName }
+    // Start the response stream
+    const response = new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     })
 
-    // Store all insights in Supabase with company name
-    const storageResults = await Promise.allSettled([
-      storeInsight('patent', { ...results.patent, company_name: companyName }),
-      storeInsight('clinical', { ...results.clinical, company_name: companyName }),
-      storeInsight('market', { ...results.market, company_name: companyName })
-    ])
+    // Process analysis in the background
+    const processAnalysis = async () => {
+      try {
+        // Initialize research coordinator and analyze
+        const coordinator = new ResearchCoordinator()
+        
+        // Send status update
+        await writer.write(encoder.encode('data: {"status":"analyzing"}\n\n'))
+        
+        const results = await coordinator.analyze(companyUrl)
+        
+        // Send analysis results
+        await writer.write(encoder.encode(`data: {"status":"storing","results":${JSON.stringify(results)}}\n\n`))
 
-    // Log storage results
-    storageResults.forEach((result, index) => {
-      const category = ['patent', 'clinical', 'market'][index]
-      if (result.status === 'fulfilled') {
-        console.log(`✅ Successfully stored ${category} insight`)
-      } else {
-        console.error(`❌ Failed to store ${category} insight:`, result.reason)
+        // Store all insights in Supabase with company name
+        const storageResults = await Promise.allSettled([
+          storeInsight('patent', { ...results.patent, company_name: companyName }),
+          storeInsight('clinical', { ...results.clinical, company_name: companyName }),
+          storeInsight('market', { ...results.market, company_name: companyName })
+        ])
+
+        // Send completion status and redirect URL
+        await writer.write(encoder.encode(`data: {"status":"complete","redirect":"/insights/${encodeURIComponent(companyName)}"}\n\n`))
+      } catch (err) {
+        const error = err as Error
+        await writer.write(encoder.encode(`data: {"status":"error","message":"${error.message}"}\n\n`))
+      } finally {
+        await writer.close()
       }
-    })
-
-    // Check if any insights failed to store
-    const failedInsights = storageResults.filter(r => r.status === 'rejected')
-    if (failedInsights.length > 0) {
-      throw new Error(`Failed to store ${failedInsights.length} insights`)
     }
 
-    // Redirect to the insights page
-    return NextResponse.redirect(
-      new URL(`/insights/${encodeURIComponent(companyName)}`, request.url)
-    )
+    // Start processing without waiting
+    processAnalysis()
+
+    return response
   } catch (error) {
     console.error("❌ Error in analyze route:", error)
     return NextResponse.json(
