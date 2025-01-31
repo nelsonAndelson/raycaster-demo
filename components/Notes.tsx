@@ -106,7 +106,7 @@ export function Notes({ insightId, taskId, userId }: NotesProps) {
               return (
                 <div key={note.id} className="flex space-x-4 group">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={member.avatar} alt={member.name} />
+                    <AvatarImage src={member.avatar} alt={member.name} className="object-cover" />
                     <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-1">

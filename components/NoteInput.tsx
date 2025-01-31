@@ -71,7 +71,7 @@ export function NoteInput({ insightId, taskId, userId, onNoteAdded }: NoteInputP
         />
         <Button
           type="submit"
-          className="w-full"
+          className="w-full bg-blue-500 hover:bg-blue-600"
           disabled={form.formState.isSubmitting}
         >
           {form.formState.isSubmitting ? (

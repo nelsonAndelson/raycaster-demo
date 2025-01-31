@@ -26,16 +26,16 @@ export const TEAM_MEMBERS = [
     avatar: '/avatars/anthony_humay.jpeg'
   },
   { 
-    id: 'jane-smith',
-    name: 'Jane Smith',
-    role: 'Designer',
-    avatar: '/avatars/anthony_humay.jpeg' // Using same image as fallback
+    id: 'nelson-baguma',
+    name: 'Nelson Baguma',
+    role: 'Developer',
+    avatar: '/avatars/nelson_baguma.jpg' // Using same image as fallback
   },
   { 
-    id: 'bob-johnson',
-    name: 'Bob Johnson',
-    role: 'Developer',
-    avatar: '/avatars/anthony_humay.jpeg' // Using same image as fallback
+    id: 'levi-lian',
+    name: 'Levi Lian',
+    role: 'Lead Developer',
+    avatar: '/avatars/levi_lian.jpeg' // Using same image as fallback
   }
 ] as const
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { InsightCard as InsightCardType } from '@/types/database'
 import AssignTaskModal from './AssignTaskModal'
 import { Button } from './ui/button'
+import Link from 'next/link'
 
 interface InsightCardProps {
   insight: InsightCardType
@@ -60,7 +61,9 @@ export default function InsightCard({ insight }: InsightCardProps) {
               {insight.sourcesAndReferences.map((source, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <span className="text-blue-500">•</span>
-                  {source}
+                  <Link href={source} target="_blank" className="text-blue-500 hover:text-blue-600">
+                    {source}
+                  </Link>
                 </li>
               ))}
             </ul>
