@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Database } from '@/types/database'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Notes } from '@/components/Notes'
@@ -28,7 +27,7 @@ interface TaskListProps {
   companyName: string
 }
 
-export default function TaskList({ tasks: initialTasks, companyName }: TaskListProps) {
+export default function TaskList({ tasks: initialTasks }: TaskListProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
   const [selectedUserId, setSelectedUserId] = useState<string>(TEAM_MEMBERS[0].id)
   const [tasks, setTasks] = useState<Task[]>(initialTasks)

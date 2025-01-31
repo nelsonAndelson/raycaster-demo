@@ -5,8 +5,27 @@ import { Database } from '@/types/database'
 
 type InsightInsert = Database['public']['Tables']['insights']['Insert']
 
+// Define interface for incoming data format (camelCase)
+interface InsightInput {
+  title: string;
+  company_name: string;
+  confidence: number;
+  companyValue?: string;
+  category: 'patent' | 'clinical' | 'market';
+  commonObjections?: string[];
+  recommendedResponses?: string[];
+  sourcesAndReferences?: string[];
+  activeTrials?: number;
+  keyIndications?: string[];
+  keyPatentAreas?: string[];
+  marketSize?: number;
+  competitors?: string[];
+  patentCount?: number;
+  lastUpdated?: string;
+}
+
 // Type guard to validate insight data
-function validateInsight(data: any): data is InsightInsert {
+function validateInsight(data: Partial<InsightInsert>): data is InsightInsert {
   return (
     typeof data.title === 'string' &&
     typeof data.company_name === 'string' &&
@@ -88,7 +107,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function storeInsight(category: string, data: any) {
+async function storeInsight(category: 'patent' | 'clinical' | 'market', data: InsightInput) {
   try {
     // Transform data to match database schema
     const transformedData = {

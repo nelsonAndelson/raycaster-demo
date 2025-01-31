@@ -1,12 +1,6 @@
 'use client'
-
-import { getInsights, getTasks } from '@/app/db/supabase'
-import InsightCard from '@/components/InsightCard'
-import TeamActivity from '@/components/TeamActivity'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
   return (

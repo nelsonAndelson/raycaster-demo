@@ -6,22 +6,34 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
-// Utility function to transform snake_case to camelCase
-function toCamelCase<T extends Record<string, any>>(obj: T): any {
+// Type utilities for converting snake_case to camelCase types
+type CamelCase<S extends string> = S extends `${infer P}_${infer Q}`
+  ? `${P}${Capitalize<CamelCase<Q>>}`
+  : S;
+
+type KeysToCamelCase<T> = T extends Array<any>
+  ? Array<KeysToCamelCase<T[number]>>
+  : T extends Record<string, any>
+  ? {
+      [K in keyof T as CamelCase<string & K>]: KeysToCamelCase<T[K]>;
+    }
+  : T;
+
+function toCamelCase<T>(obj: T): KeysToCamelCase<T> {
   if (Array.isArray(obj)) {
-    return obj.map(v => toCamelCase(v))
-  } else if (obj !== null && obj.constructor === Object) {
-    return Object.keys(obj).reduce(
+    return obj.map(v => toCamelCase(v)) as KeysToCamelCase<T>;
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj as object).reduce(
       (result, key) => ({
         ...result,
         [key.replace(/([-_][a-z])/g, group =>
           group.toUpperCase().replace('-', '').replace('_', '')
-        )]: toCamelCase(obj[key])
+        )]: toCamelCase((obj as Record<string, unknown>)[key])
       }),
       {}
-    )
+    ) as KeysToCamelCase<T>;
   }
-  return obj
+  return obj as KeysToCamelCase<T>;
 }
 
 // Helper functions for type-safe database access
