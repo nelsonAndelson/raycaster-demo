@@ -1,6 +1,6 @@
 # Raycaster Demo
 
-Dear Levi and Andrew,
+Dear Levi and Anthony,
 
 Thank you for considering my application for the internship position at Raycaster.ai. I've created this demo project to showcase my technical skills and demonstrate my understanding of Raycaster's mission in revolutionizing AI-powered sales insights.
 
