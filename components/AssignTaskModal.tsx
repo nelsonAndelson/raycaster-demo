@@ -170,7 +170,7 @@ export default function AssignTaskModal({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="bg-blue-500 hover:bg-blue-600">
                 {form.formState.isSubmitting ? 'Creating...' : 'Create Task'}
               </Button>
             </div>

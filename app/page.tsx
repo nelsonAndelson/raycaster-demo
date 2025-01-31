@@ -100,7 +100,7 @@ export default function HomePage() {
 
           <Button 
             type="submit" 
-            className="w-full h-12" 
+            className="w-full h-12 bg-blue-500 hover:bg-blue-600"  
             disabled={isLoading}
           >
             {isLoading ? (
