@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Notes } from '@/components/Notes'
 import { TEAM_MEMBERS } from '@/types/task'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getTasks, supabase } from '@/app/db/supabase'
 
 type Task = {
   id: string
@@ -27,9 +28,10 @@ interface TaskListProps {
   companyName: string
 }
 
-export default function TaskList({ tasks, companyName }: TaskListProps) {
+export default function TaskList({ tasks: initialTasks, companyName }: TaskListProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
   const [selectedUserId, setSelectedUserId] = useState<string>(TEAM_MEMBERS[0].id)
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
 
   // Load selected user from localStorage on mount
   useEffect(() => {
@@ -38,6 +40,107 @@ export default function TaskList({ tasks, companyName }: TaskListProps) {
       setSelectedUserId(savedUserId)
     }
   }, [])
+
+  // Set up real-time subscription for tasks
+  useEffect(() => {
+    const loadTasks = async () => {
+      console.log('Loading tasks...')
+      const { data } = await getTasks()
+      if (data) {
+        // Filter tasks to only include those that match the initial tasks' insight IDs
+        const relevantInsightIds = new Set(initialTasks.map(task => task.insightId))
+        const filteredTasks = data.filter(task => relevantInsightIds.has(task.insightId))
+        console.log('Filtered tasks:', filteredTasks)
+        setTasks(filteredTasks)
+      }
+    }
+
+    console.log('Setting up real-time subscription...')
+    const subscription = supabase
+      .channel('tasks-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks'
+        },
+        async (payload) => {
+          console.log('Real-time event received:', {
+            eventType: payload.eventType,
+            table: payload.table,
+            schema: payload.schema,
+            newRecord: payload.new,
+            oldRecord: payload.old
+          })
+
+          // Get the relevant insight IDs for this company
+          const relevantInsightIds = new Set(initialTasks.map(task => task.insightId))
+
+          // Handle different event types
+          switch (payload.eventType) {
+            case 'INSERT': {
+              const newTask = payload.new
+              // Only add if it belongs to our company's insights
+              if (newTask && relevantInsightIds.has(newTask.insight_id)) {
+                setTasks(prev => [
+                  {
+                    id: newTask.id,
+                    title: newTask.title,
+                    status: newTask.status,
+                    assignedTo: newTask.assigned_to,
+                    insightId: newTask.insight_id,
+                    createdAt: newTask.created_at,
+                    updatedAt: newTask.updated_at,
+                    description: newTask.description,
+                    dueDate: newTask.due_date
+                  },
+                  ...prev
+                ])
+              }
+              break
+            }
+            case 'UPDATE': {
+              const updatedTask = payload.new
+              if (updatedTask && relevantInsightIds.has(updatedTask.insight_id)) {
+                setTasks(prev => prev.map(task => 
+                  task.id === updatedTask.id ? {
+                    id: updatedTask.id,
+                    title: updatedTask.title,
+                    status: updatedTask.status,
+                    assignedTo: updatedTask.assigned_to,
+                    insightId: updatedTask.insight_id,
+                    createdAt: updatedTask.created_at,
+                    updatedAt: updatedTask.updated_at,
+                    description: updatedTask.description,
+                    dueDate: updatedTask.due_date
+                  } : task
+                ))
+              }
+              break
+            }
+            case 'DELETE': {
+              const deletedTask = payload.old
+              if (deletedTask) {
+                setTasks(prev => prev.filter(task => task.id !== deletedTask.id))
+              }
+              break
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
+
+    // Initial load
+    loadTasks()
+
+    return () => {
+      console.log('Cleaning up subscription...')
+      subscription.unsubscribe()
+    }
+  }, [initialTasks])
 
   // Save selected user to localStorage
   const handleUserChange = (userId: string) => {
