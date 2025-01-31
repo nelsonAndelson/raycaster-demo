@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Notes } from '@/components/Notes'
-import { Timeline } from '@/components/Timeline'
 import { TEAM_MEMBERS } from '@/types/task'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -199,15 +198,11 @@ export default function TaskList({ tasks, companyName }: TaskListProps) {
                       taskId={task.id}
                       userId={selectedUserId}
                     />
-                    <Timeline
-                      insightId={task.insightId}
-                      taskId={task.id}
-                    />
                   </div>
                 </div>
               )}
-          </div>
-        ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createTask } from '@/app/db/supabase'
 import { taskFormSchema, TaskFormValues, TEAM_MEMBERS } from '@/types/task'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useToast } from '@/hooks/use-toast'
+import { createTask } from '@/app/db/supabase'
 
 interface AssignTaskModalProps {
   open: boolean
@@ -43,8 +43,7 @@ export default function AssignTaskModal({
 
   const onSubmit = async (data: TaskFormValues) => {
     try {
-      console.log('=== TASK SUBMISSION DEBUG ===')
-      console.log('1. Raw form data:', data)
+      console.log('Form values:', JSON.stringify(data, null, 2))
       
       const taskData = {
         title: data.title,
@@ -56,24 +55,25 @@ export default function AssignTaskModal({
         category: data.category
       }
       
-      console.log('2. Transformed task data:', taskData)
+      console.log('Prepared task data:', JSON.stringify(taskData, null, 2))
       
-      const result = await createTask(taskData)
-      console.log('3. Task creation successful:', result)
+      const task = await createTask(taskData)
+      console.log('Created task response:', JSON.stringify(task, null, 2))
 
       toast({
         title: 'Success',
-        description: `Task "${result.title}" created and assigned to ${result.assignedTo}`,
+        description: `Task "${task.title}" created and assigned to ${task.assignedTo}`,
       })
       
       form.reset()
       onClose()
     } catch (error) {
-      console.error('4. Task creation error:', {
+      console.error('Task creation error details:', {
         error,
         errorType: error instanceof Error ? 'Error' : typeof error,
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
+        formData: data
       })
       
       const errorMessage = error instanceof Error 

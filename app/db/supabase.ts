@@ -60,52 +60,9 @@ export const createInsight = (insight: Database['public']['Tables']['insights'][
   supabase.from('insights').insert(insight)
 
 export const createTask = async (task: Database['public']['Tables']['tasks']['Insert']) => {
-  console.log('=== CREATE TASK DEBUG ===')
-  console.log('1. Input task data:', task)
-  
-  const taskData = {
-    title: task.title,
-    status: task.status || 'pending',
-    assigned_to: task.assigned_to,
-    insight_id: task.insight_id,
-    category: task.category,
-    description: task.description,
-    due_date: task.due_date
-  }
-  
-  console.log('2. Transformed task data:', taskData)
-
-  const { data: newTask, error: taskError } = await supabase
-    .from('tasks')
-    .insert(taskData)
-    .select('*')
-    .single()
-
-  if (taskError) {
-    console.error('3. Task creation error:', taskError)
-    throw taskError
-  }
-
-  // Create an activity record for the new task
-  const activityData = {
-    type: 'task_created',
-    content: { task: newTask.title, status: newTask.status },
-    task_id: newTask.id,
-    insight_id: newTask.insight_id,
-    user_id: task.assigned_to // Using assigned_to as the user_id for the activity
-  }
-
-  const { error: activityError } = await supabase
-    .from('activities')
-    .insert(activityData)
-
-  if (activityError) {
-    console.error('4. Activity creation error:', activityError)
-    // Don't throw here, as the task was still created successfully
-  }
-
-  console.log('5. Successfully created task with activity:', newTask)
-  return toCamelCase(newTask)
+  const { data, error } = await supabase.from('tasks').insert(task).select().single()
+  if (error) throw error
+  return toCamelCase(data)
 }
 
 export const updateTask = async (id: string, task: Database['public']['Tables']['tasks']['Update']) => {
@@ -169,7 +126,7 @@ export const createTaskNote = async (
 }
 
 export const getTaskWithRelated = async (taskId: string) => {
-  const [taskResult, notesResult, activitiesResult] = await Promise.all([
+  const [taskResult, notesResult] = await Promise.all([
     supabase
       .from('tasks')
       .select('*')
@@ -179,11 +136,6 @@ export const getTaskWithRelated = async (taskId: string) => {
       .from('notes')
       .select('*')
       .eq('task_id', taskId)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('activities')
-      .select('*')
-      .eq('task_id', taskId)
       .order('created_at', { ascending: false })
   ])
 
@@ -191,27 +143,6 @@ export const getTaskWithRelated = async (taskId: string) => {
 
   return {
     task: toCamelCase(taskResult.data),
-    notes: notesResult.data ? toCamelCase(notesResult.data) : [],
-    activities: activitiesResult.data ? toCamelCase(activitiesResult.data) : []
+    notes: notesResult.data ? toCamelCase(notesResult.data) : []
   }
-}
-
-export const getActivities = async (insightId?: string, taskId?: string) => {
-  let query = supabase
-    .from('activities')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50)
-
-  if (insightId) {
-    query = query.eq('insight_id', insightId)
-  }
-  if (taskId) {
-    query = query.eq('task_id', taskId)
-  }
-
-  const { data, error } = await query
-  if (error) throw error
-
-  return toCamelCase(data)
 }
