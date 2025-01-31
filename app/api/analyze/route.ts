@@ -98,6 +98,12 @@ export async function POST(request: Request) {
           storeInsight('market', { ...results.market, company_name: companyName })
         ])
 
+        // Check for failed storage operations
+        const failedResults = storageResults.filter(result => result.status === 'rejected')
+        if (failedResults.length > 0) {
+          throw new Error(`Failed to store ${failedResults.length} insights`)
+        }
+
         // Send completion status and redirect URL
         await writer.write(encoder.encode(`data: {"status":"complete","redirect":"/insights/${encodeURIComponent(companyName)}"}\n\n`))
       } catch (err) {
